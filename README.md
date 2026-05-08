@@ -60,15 +60,17 @@ Esta entrega aplica cinco padrões GoF para resolver cada problema identificado,
 
 ```
                           ┌──────────────────────────────────┐
-     Cliente (Controller) │       LibraryFacade  (Facade)    │
-       ↕ REST / Test       │  addBook · borrowItem · search   │
+     Cliente (Controller) │      LibraryFacade  (Facade)     │
+       ↕ REST / Test      │  addBook · borrowItem · search   │
                           └──────────┬───────────────────────┘
                                      │ coordena
           ┌──────────────────────────┼───────────────────────────┐
+          │                          │                           │
           ↓                          ↓                           ↓
-   Library (Singleton)     LibraryItemFactory          SearchContext<T>
-   Aggregate Root          BookFactory / DvdFactory     + Strategy
-   items / users / loans   cria Book ou Dvd             title / author / isbn / name
+   Library (Singleton)       LibraryItemFactory           SearchContext<T>
+   Aggregate Root            BookFactory / DvdFactory     + Strategy
+   items / users / loans     cria Book ou Dvd             title / author / isbn / name
+          │
           │
           └──→ LoanEventDispatcher (Observer Subject)
                    → OverdueNotificationObserver
