@@ -1,0 +1,82 @@
+# ── Claude Code ──────────────────────────────────────────────────────────────
+CLAUDE.md
+.claude/
+
+# ── Secrets e variáveis de ambiente ──────────────────────────────────────────
+.env
+.env.*
+*.env
+!.env.example
+
+# ── Gradle ───────────────────────────────────────────────────────────────────
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ── IDE — IntelliJ IDEA ──────────────────────────────────────────────────────
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ── IDE — VS Code ─────────────────────────────────────────────────────────────
+.vscode/
+*.code-workspace
+
+# ── IDE — Eclipse ────────────────────────────────────────────────────────────
+.classpath
+.project
+.settings/
+bin/
+
+# ── IDE — NetBeans ───────────────────────────────────────────────────────────
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# ── Java ─────────────────────────────────────────────────────────────────────
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Sistema operacional ───────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── Spring Boot ──────────────────────────────────────────────────────────────
+spring-shell.log
+
+# ── Relatórios de testes e cobertura (gerados pelo build) ────────────────────
+target/
+**/target/
+
+# ── JaCoCo ───────────────────────────────────────────────────────────────────
+jacoco.exec
+
+# ── Arquivos temporários ──────────────────────────────────────────────────────
+*.tmp
+*.bak
+*.swp
+*~.nib
