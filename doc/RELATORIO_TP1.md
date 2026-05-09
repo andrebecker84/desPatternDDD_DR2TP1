@@ -252,7 +252,7 @@ new ContextoBusca<>(new BuscaTitulo()).buscar(query, repositorioItem.findAll());
 ## 3. Diagrama de Classes Refatorado
 
 ```mermaid
-%%{init: {"theme": "neo-dark"}}%%
+%%{init: {"theme": "dark"}}%%
 classDiagram
     direction TB
 
