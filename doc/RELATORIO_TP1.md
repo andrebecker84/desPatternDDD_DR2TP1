@@ -256,10 +256,7 @@ new ContextoBusca<>(new BuscaTitulo()).buscar(query, repositorioItem.findAll());
 classDiagram
     direction TB
 
-    %% ═══════════════════════════════════════════
-    %% NAMESPACE: controlador
-    %% ═══════════════════════════════════════════
-    namespace controlador {
+    namespace Controller {
         class ControladorBiblioteca {
             +adicionarLivro(req) RespostaItem
             +adicionarDvd(req) RespostaItem
@@ -272,10 +269,7 @@ classDiagram
         }
     }
 
-    %% ═══════════════════════════════════════════
-    %% NAMESPACE: servico
-    %% ═══════════════════════════════════════════
-    namespace servico {
+    namespace DP_Facade {
         class FachadaBiblioteca {
             <<Facade>>
             +adicionarLivro(titulo, autor, isbn) ItemAcervo
@@ -284,7 +278,6 @@ classDiagram
             +listarItens() List~ItemAcervo~
             +adicionarUsuario(nome, email) Usuario
             +removerUsuario(id) void
-            +listarUsuarios() List~Usuario~
             +realizarEmprestimo(itemId, usuarioId) Emprestimo
             +registrarDevolucao(emprestimoId) void
             +listarVencidos() List~Emprestimo~
@@ -295,10 +288,7 @@ classDiagram
         }
     }
 
-    %% ═══════════════════════════════════════════
-    %% NAMESPACE: padrao.singleton
-    %% ═══════════════════════════════════════════
-    namespace padrao_singleton {
+    namespace DP_Singleton {
         class Biblioteca {
             <<Singleton>>
             -instancia$ Biblioteca
@@ -307,14 +297,11 @@ classDiagram
         }
     }
 
-    %% ═══════════════════════════════════════════
-    %% NAMESPACE: padrao.factory
-    %% ═══════════════════════════════════════════
-    namespace padrao_factory {
+    namespace DP_FactoryMethod {
         class FabricaItem {
             <<abstract>>
             +criar(req RequisicaoItem) ItemAcervo
-            #validarRequisicao(req)* void
+            #validarRequisicao(req) void
             #executarCriacao(req)* ItemAcervo
         }
         class FabricaLivro {
@@ -336,10 +323,7 @@ classDiagram
         }
     }
 
-    %% ═══════════════════════════════════════════
-    %% NAMESPACE: padrao.observer
-    %% ═══════════════════════════════════════════
-    namespace padrao_observer {
+    namespace DP_Observer {
         class ObservadorEmprestimo {
             <<interface>>
             +aoEmprestimo(e Emprestimo) void
@@ -358,43 +342,37 @@ classDiagram
             -observadores List~ObservadorEmprestimo~
         }
         class ObservadorAtraso {
-            +aoEmprestimo(e) void
-            +aoDevolucao(e) void
-            +aoVencimento(e) void
+            +aoEmprestimo(e Emprestimo) void
+            +aoDevolucao(e Emprestimo) void
+            +aoVencimento(e Emprestimo) void
         }
     }
 
-    %% ═══════════════════════════════════════════
-    %% NAMESPACE: padrao.strategy
-    %% ═══════════════════════════════════════════
-    namespace padrao_strategy {
-        class EstrategiaBusca {
+    namespace DP_Strategy {
+        class EstrategiaBusca~T~ {
             <<interface>>
-            +buscar(query, lista) List~T~
+            +buscar(query String, lista List~T~) List~T~
         }
-        class ContextoBusca {
-            -estrategia EstrategiaBusca
-            +definirEstrategia(e EstrategiaBusca) void
-            +buscar(query, lista) List~T~
+        class ContextoBusca~T~ {
+            -estrategia EstrategiaBusca~T~
+            +definirEstrategia(e EstrategiaBusca~T~) void
+            +buscar(query String, lista List~T~) List~T~
         }
         class BuscaTitulo {
-            +buscar(query, lista) List~ItemAcervo~
+            +buscar(query String, lista List~ItemAcervo~) List~ItemAcervo~
         }
         class BuscaAutor {
-            +buscar(query, lista) List~ItemAcervo~
+            +buscar(query String, lista List~ItemAcervo~) List~ItemAcervo~
         }
         class BuscaIsbn {
-            +buscar(query, lista) List~ItemAcervo~
+            +buscar(query String, lista List~ItemAcervo~) List~ItemAcervo~
         }
         class BuscaNomeUsuario {
-            +buscar(query, lista) List~Usuario~
+            +buscar(query String, lista List~Usuario~) List~Usuario~
         }
     }
 
-    %% ═══════════════════════════════════════════
-    %% NAMESPACE: modelo
-    %% ═══════════════════════════════════════════
-    namespace modelo {
+    namespace DDD_Dominio {
         class ItemAcervo {
             <<abstract>>
             #id String
@@ -435,38 +413,45 @@ classDiagram
         }
     }
 
-    %% ═══════════════════════════════════════════
-    %% RELAÇÕES ENTRE NAMESPACES (vertical)
-    %% ═══════════════════════════════════════════
+    %% associação — Controller tem referência estrutural à Facade (Spring @Autowired)
+    ControladorBiblioteca "1" --> "1" FachadaBiblioteca : usa
 
-    ControladorBiblioteca --> FachadaBiblioteca : usa
+    %% dependência pura — Facade acessa Biblioteca via getInstance(), sem referência estrutural
+    FachadaBiblioteca ..> Biblioteca : usa Singleton
+    %% associações — Facade injeta e mantém referência estrutural a cada colaborador
+    FachadaBiblioteca "1" --> "1" FabricaItem : delega criação
+    FachadaBiblioteca "1" --> "1" DespachadorEventos : dispara eventos
+    FachadaBiblioteca "1" --> "1" ContextoBusca~T~ : delega busca
 
-    FachadaBiblioteca ..> Biblioteca           : usa Singleton
-    FachadaBiblioteca ..> FabricaItem          : delega criação
-    FachadaBiblioteca ..> DespachadorEventos   : dispara eventos
-    FachadaBiblioteca ..> ContextoBusca        : delega busca
-
+    %% herança — sem multiplicidade (padrão UML2)
     FabricaItem <|-- FabricaLivro
     FabricaItem <|-- FabricaDvd
-    FabricaLivro ..> Livro  : cria
-    FabricaDvd   ..> Dvd    : cria
-    FabricaItem  ..> RequisicaoItem : usa
+    %% dependências de criação — sem multiplicidade
+    FabricaLivro ..> Livro : cria
+    FabricaDvd ..> Dvd : cria
+    FabricaItem ..> RequisicaoItem : usa
 
+    %% realização — sem multiplicidade (padrão UML2)
     SujetoEmprestimo <|.. DespachadorEventos
     ObservadorEmprestimo <|.. ObservadorAtraso
-    DespachadorEventos o-- ObservadorEmprestimo : observadores
+    %% agregação — dispatcher agrega zero ou mais observers
+    DespachadorEventos "1" o-- "0..*" ObservadorEmprestimo : observadores
 
-    EstrategiaBusca <|.. BuscaTitulo
-    EstrategiaBusca <|.. BuscaAutor
-    EstrategiaBusca <|.. BuscaIsbn
-    EstrategiaBusca <|.. BuscaNomeUsuario
-    ContextoBusca --> EstrategiaBusca : delega
+    %% realização — sem multiplicidade (padrão UML2)
+    EstrategiaBusca~T~ <|.. BuscaTitulo
+    EstrategiaBusca~T~ <|.. BuscaAutor
+    EstrategiaBusca~T~ <|.. BuscaIsbn
+    EstrategiaBusca~T~ <|.. BuscaNomeUsuario
+    %% associação — Context mantém referência a uma estratégia ativa
+    ContextoBusca~T~ "1" --> "1" EstrategiaBusca~T~ : delega
 
+    %% herança — sem multiplicidade (padrão UML2)
     ItemAcervo <|-- Livro
     ItemAcervo <|-- Dvd
-    Emprestimo --> ItemAcervo      : item
-    Emprestimo --> Usuario         : usuario
-    Emprestimo --> StatusEmprestimo : status
+    %% associações de domínio com multiplicidade
+    Emprestimo "0..*" --> "1" ItemAcervo : item
+    Emprestimo "0..*" --> "1" Usuario : usuario
+    Emprestimo "1" --> "1" StatusEmprestimo : status
 ```
 
 ---

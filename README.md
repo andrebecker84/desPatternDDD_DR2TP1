@@ -46,45 +46,45 @@ Esta entrega aplica cinco padrões GoF para resolver cada problema identificado,
 
 ## Padrões de Projeto Implementados
 
-| Padrão             | Categoria GoF  | Problema resolvido                                                                                                   |
-|--------------------|----------------|----------------------------------------------------------------------------------------------------------------------|
-| **Singleton**      | Criacional     | Garante instância única de `Library` com estado consistente em toda a aplicação                                      |
-| **Factory Method** | Criacional     | Cria `Book` e `Dvd` sem acoplar o cliente ao tipo concreto; extensível sem modificar código existente                |
-| **Facade**         | Estrutural     | Interface única `LibraryFacade` substitui acesso direto a Singleton, Factories, Observer e Strategy                  |
-| **Observer**       | Comportamental | Notificação proativa de empréstimos vencidos sem polling; novos observers adicionados sem alterar classes existentes |
-| **Strategy**       | Comportamental | Algoritmos de busca (título, autor, ISBN, nome) intercambiáveis em tempo de execução                                 |
+| Padrão             | Categoria GoF  | Problema resolvido                                                                                                         |
+|--------------------|----------------|----------------------------------------------------------------------------------------------------------------------------|
+| **Singleton**      | Criacional     | Garante instância única de `Biblioteca` com estado consistente em toda a aplicação                                         |
+| **Factory Method** | Criacional     | Cria `Livro` e `Dvd` sem acoplar o cliente ao tipo concreto; extensível sem modificar código existente                    |
+| **Facade**         | Estrutural     | Interface única `FachadaBiblioteca` substitui acesso direto a Singleton, Factories, Observer e Strategy                   |
+| **Observer**       | Comportamental | Notificação proativa de empréstimos vencidos sem polling; novos observers adicionados sem alterar classes existentes       |
+| **Strategy**       | Comportamental | Algoritmos de busca (título, autor, ISBN, nome) intercambiáveis em tempo de execução via `ContextoBusca`                  |
 
 ---
 
 ## Arquitetura e DDD
 
 ```
-                          ┌──────────────────────────────────┐
-     Cliente (Controller) │      LibraryFacade  (Facade)     │
-       ↕ REST / Test      │  addBook · borrowItem · search   │
-                          └──────────┬───────────────────────┘
-                                     │ coordena
-          ┌──────────────────────────┼───────────────────────────┐
-          │                          │                           │
-          ↓                          ↓                           ↓
-   Library (Singleton)       LibraryItemFactory           SearchContext<T>
-   Aggregate Root            BookFactory / DvdFactory     + Strategy
-   items / users / loans     cria Book ou Dvd             title / author / isbn / name
+                             ┌──────────────────────────────────────┐
+  ControladorBiblioteca      │    FachadaBiblioteca  (Facade)       │
+       ↕ REST / Test         │  adicionarLivro · realizarEmprestimo │
+                             └──────────┬───────────────────────────┘
+                                        │ coordena
+          ┌─────────────────────────────┼───────────────────────────┐
+          │                             │                           │
+          ↓                             ↓                           ↓
+   Biblioteca (Singleton)        FabricaItem                 ContextoBusca<T>
+   Aggregate Root                FabricaLivro / FabricaDvd   + EstrategiaBusca
+   itens / usuarios / emprestimos cria Livro ou Dvd          titulo / autor / isbn / nome
           │
           │
-          └──→ LoanEventDispatcher (Observer Subject)
-                   → OverdueNotificationObserver
+          └──→ DespachadorEventos (Observer Subject)
+                   → ObservadorAtraso
 ```
 
 **Conceitos DDD aplicados:**
 
-| Conceito            | Implementação                                                          |
-|---------------------|------------------------------------------------------------------------|
-| Entity              | `LibraryItem` (abstract), `Book`, `Dvd`, `User`, `Loan`                |
-| Value Object        | `LoanStatus` (enum — sem identidade, imutável)                         |
-| Aggregate Root      | `Library` (Singleton — controla todas as coleções)                     |
-| Domain Service      | `LibraryFacade` (orquestra operações que envolvem múltiplas entidades) |
-| Ubiquitous Language | `borrowItem`, `returnItem`, `findOverdueLoans`, `checkOut`, `checkIn`  |
+| Conceito            | Implementação                                                                   |
+|---------------------|---------------------------------------------------------------------------------|
+| Entity              | `ItemAcervo` (abstract), `Livro`, `Dvd`, `Usuario`, `Emprestimo`                |
+| Value Object        | `StatusEmprestimo` (enum — sem identidade, imutável)                            |
+| Aggregate Root      | `Biblioteca` (Singleton — controla todas as coleções)                           |
+| Domain Service      | `FachadaBiblioteca` (orquestra operações que envolvem múltiplas entidades)      |
+| Ubiquitous Language | `realizarEmprestimo`, `registrarDevolucao`, `listarVencidos`, `retirar`, `devolver` |
 
 ---
 
@@ -93,52 +93,52 @@ Esta entrega aplica cinco padrões GoF para resolver cada problema identificado,
 ```
 src/
 ├── main/java/com/becker/biblioteca/
-│   ├── LibraryApplication.java
+│   ├── BibliotecaApplication.java
 │   ├── model/
-│   │   ├── LibraryItem.java               # entidade abstrata — base do acervo
-│   │   ├── Book.java                      # livro: author + isbn
-│   │   ├── Dvd.java                       # DVD: director + durationMinutes
-│   │   ├── User.java                      # usuário com identidade
-│   │   ├── Loan.java                      # empréstimo com ciclo de vida
-│   │   └── LoanStatus.java               # ACTIVE / RETURNED / OVERDUE
+│   │   ├── ItemAcervo.java                # entidade abstrata — base do acervo
+│   │   ├── Livro.java                     # livro: autor + isbn
+│   │   ├── Dvd.java                       # DVD: diretor + duracaoMinutos
+│   │   ├── Usuario.java                   # usuário com identidade
+│   │   ├── Emprestimo.java                # empréstimo com ciclo de vida
+│   │   └── StatusEmprestimo.java          # ATIVO / DEVOLVIDO / VENCIDO
 │   ├── pattern/
 │   │   ├── singleton/
-│   │   │   └── Library.java              # Singleton — DCL thread-safe
+│   │   │   └── Biblioteca.java            # Singleton — DCL thread-safe
 │   │   ├── factory/
-│   │   │   ├── LibraryItemFactory.java   # Factory Method abstrata
-│   │   │   ├── BookFactory.java          # cria Book
-│   │   │   ├── DvdFactory.java           # cria Dvd
-│   │   │   └── ItemCreationRequest.java  # Builder para parâmetros de criação
+│   │   │   ├── FabricaItem.java           # Factory Method abstrata
+│   │   │   ├── FabricaLivro.java          # cria Livro
+│   │   │   ├── FabricaDvd.java            # cria Dvd
+│   │   │   └── RequisicaoItem.java        # Builder para parâmetros de criação
 │   │   ├── observer/
-│   │   │   ├── LoanObserver.java         # interface Observer
-│   │   │   ├── LoanSubject.java          # interface Subject
-│   │   │   ├── LoanEventDispatcher.java  # Subject concreto
-│   │   │   └── OverdueNotificationObserver.java  # Observer concreto
+│   │   │   ├── ObservadorEmprestimo.java  # interface Observer
+│   │   │   ├── SujetoEmprestimo.java      # interface Subject
+│   │   │   ├── DespachadorEventos.java    # Subject concreto
+│   │   │   └── ObservadorAtraso.java      # Observer concreto
 │   │   └── strategy/
-│   │       ├── SearchStrategy.java       # interface genérica Strategy<T>
-│   │       ├── TitleSearchStrategy.java
-│   │       ├── AuthorSearchStrategy.java
-│   │       ├── IsbnSearchStrategy.java
-│   │       ├── UserNameSearchStrategy.java
-│   │       └── SearchContext.java        # Context — troca de estratégia em runtime
+│   │       ├── EstrategiaBusca.java       # interface genérica Strategy<T>
+│   │       ├── BuscaTitulo.java
+│   │       ├── BuscaAutor.java
+│   │       ├── BuscaIsbn.java
+│   │       ├── BuscaNomeUsuario.java
+│   │       └── ContextoBusca.java         # Context — troca de estratégia em runtime
 │   ├── service/
-│   │   └── LibraryFacade.java            # Facade — único ponto de entrada
+│   │   └── FachadaBiblioteca.java         # Facade — único ponto de entrada
 │   ├── controller/
-│   │   └── LibraryController.java        # REST controller
-│   ├── dto/                              # request/response records
+│   │   └── ControladorBiblioteca.java     # REST controller
+│   ├── dto/                               # request/response records
 │   ├── exception/
-│   │   └── GlobalExceptionHandler.java
+│   │   └── TratadorExcecoes.java
 │   └── config/
-│       └── LibraryObserverConfig.java    # registro de observers no boot
+│       └── ConfiguracaoObservadores.java  # registro de observers no boot
 └── test/java/com/becker/biblioteca/
-    ├── LibraryApplicationTest.java
+    ├── BibliotecaApplicationTest.java
     └── pattern/
-        ├── singleton/LibrarySingletonTest.java   # unicidade + thread-safety
-        ├── factory/  BookFactoryTest.java         # criação + validações
-        │             DvdFactoryTest.java
-        ├── observer/ LoanEventDispatcherTest.java # subscribe/notify
-        ├── strategy/ SearchStrategyTest.java      # todos os algoritmos
-        └── facade/   LibraryFacadeTest.java       # integração end-to-end
+        ├── singleton/ BibliotecaSingletonTest.java    # unicidade + thread-safety
+        ├── factory/   FabricaLivroTest.java            # criação + validações
+        │              FabricaDvdTest.java
+        ├── observer/  DespachadorEventosTest.java      # subscribe/notify
+        ├── strategy/  EstrategiaBuscaTest.java         # todos os algoritmos
+        └── facade/    FachadaBibliotecaTest.java       # integração end-to-end
 ```
 
 ---
@@ -167,15 +167,15 @@ src/
 
 **35+ testes — 0 falhas — `./gradlew test`**
 
-| Classe de Teste           | Testes | Comportamentos validados                                                                          |
-|---------------------------|--------|---------------------------------------------------------------------------------------------------|
-| `LibrarySingletonTest`    | 4      | Unicidade de instância, thread-safety (20 threads), coleções imutáveis                            |
-| `BookFactoryTest`         | 5      | Criação válida, IDs únicos, rejeição de autor/isbn nulo ou vazio                                  |
-| `DvdFactoryTest`          | 3      | Criação válida, rejeição de diretor vazio, duração zero ou negativa                               |
-| `SearchStrategyTest`      | 9      | Busca por título, autor, ISBN, nome de usuário; case-insensitive; troca de estratégia em runtime  |
-| `LoanEventDispatcherTest` | 5      | subscribe/unsubscribe, criação, devolução, múltiplos observers, sem falso positivo em vencimentos |
-| `LibraryFacadeTest`       | 13     | Factory Method via facade, ciclo completo de empréstimo, buscas, exceções de domínio              |
-| `LibraryApplicationTest`  | 1      | Contexto Spring carrega sem erros                                                                 |
+| Classe de Teste               | Testes | Comportamentos validados                                                                          |
+|-------------------------------|--------|---------------------------------------------------------------------------------------------------|
+| `BibliotecaSingletonTest`     | 4      | Unicidade de instância, thread-safety (20 threads), coleções imutáveis                            |
+| `FabricaLivroTest`            | 5      | Criação válida, IDs únicos, rejeição de autor/isbn nulo ou vazio                                  |
+| `FabricaDvdTest`              | 3      | Criação válida, rejeição de diretor vazio, duração zero ou negativa                               |
+| `EstrategiaBuscaTest`         | 9      | Busca por título, autor, ISBN, nome de usuário; case-insensitive; troca de estratégia em runtime  |
+| `DespachadorEventosTest`      | 5      | subscribe/unsubscribe, criação, devolução, múltiplos observers, sem falso positivo em vencimentos |
+| `FachadaBibliotecaTest`       | 13     | Factory Method via facade, ciclo completo de empréstimo, buscas, exceções de domínio              |
+| `BibliotecaApplicationTest`   | 1      | Contexto Spring carrega sem erros                                                                 |
 
 ---
 
@@ -239,7 +239,7 @@ curl /api/biblioteca/emprestimos/vencidos
 
 ## Relatório Técnico
 
-A justificativa completa de cada padrão — diagrama refatorado em PlantUML, código antes/depois, mapeamento problema→solução e princípios SOLID — está em [`doc/RELATORIO_TP1.md`](doc/RELATORIO_TP1.md).
+A justificativa completa de cada padrão — diagrama refatorado em Mermaid, código antes/depois, mapeamento problema→solução e princípios SOLID — está em [`doc/RELATORIO_TP1.md`](doc/RELATORIO_TP1.md).
 
 ---
 
